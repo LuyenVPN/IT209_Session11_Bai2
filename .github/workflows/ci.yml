@@ -1,4 +1,4 @@
-  name: Java Spring Boot CI (Gradle)
+   name: Java Spring Boot CI (Gradle)
 
   on:
     push:
@@ -21,16 +21,19 @@
 
         - name: Cấp quyền cho Gradle Wrapper
           run: chmod +x gradlew
+          working-directory: inventory-service
 
         - name: Chạy unit test
           run: ./gradlew test
+          working-directory: inventory-service
 
         - name: Đóng gói tệp JAR với Gradle
           run: ./gradlew bootJar
+          working-directory: inventory-service
 
         - name: Lưu trữ thành phẩm JAR Artifact
           uses: actions/upload-artifact@v4
           with:
             name: app-jar
-            path: build/libs/*.jar
+            path: inventory-service/build/libs/*.jar
             if-no-files-found: error
