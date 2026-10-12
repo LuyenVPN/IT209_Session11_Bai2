@@ -1,8 +1,9 @@
-   name: Java Spring Boot CI (Gradle)
+  name: Java Spring Boot CI (Gradle)
 
   on:
     push:
-      branches: ["main"]
+      branches:
+        - main
 
   jobs:
     test:
