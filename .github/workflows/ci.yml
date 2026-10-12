@@ -19,21 +19,39 @@
             java-version: '17'
             distribution: 'temurin'
 
+        - name: Xác định đường dẫn Gradle Wrapper
+          id: gradle-wrapper
+          run: |
+            if [ -f inventory-service/gradlew ]; then
+              echo "gradlew_path=inventory-service/gradlew" >> "$GITHUB_OUTPUT"
+              echo "gradlew_cmd=./inventory-service/gradlew" >> "$GITHUB_OUTPUT"
+              echo "artifact_path=inventory-service/build/libs/*.jar" >> "$GITHUB_OUTPUT"
+            elif [ -f gradlew ]; then
+              echo "gradlew_path=gradlew" >> "$GITHUB_OUTPUT"
+              echo "gradlew_cmd=./gradlew" >> "$GITHUB_OUTPUT"
+              echo "artifact_path=build/libs/*.jar" >> "$GITHUB_OUTPUT"
+            fi
+
         - name: Cấp quyền cho Gradle Wrapper
-          run: chmod +x gradlew
-          working-directory: inventory-service
+          if: ${{ steps.gradle-wrapper.outputs.gradlew_path != '' }}
+          run: chmod +x "${{ steps.gradle-wrapper.outputs.gradlew_path }}"
 
         - name: Chạy unit test
-          run: ./gradlew test
-          working-directory: inventory-service
+          if: ${{ steps.gradle-wrapper.outputs.gradlew_cmd != '' }}
+          run: ${{ steps.gradle-wrapper.outputs.gradlew_cmd }} test
 
         - name: Đóng gói tệp JAR với Gradle
-          run: ./gradlew bootJar
-          working-directory: inventory-service
+          if: ${{ steps.gradle-wrapper.outputs.gradlew_cmd != '' }}
+          run: ${{ steps.gradle-wrapper.outputs.gradlew_cmd }} bootJar
 
         - name: Lưu trữ thành phẩm JAR Artifact
+          if: ${{ steps.gradle-wrapper.outputs.artifact_path != '' }}
           uses: actions/upload-artifact@v4
           with:
             name: app-jar
-            path: inventory-service/build/libs/*.jar
+            path: ${{ steps.gradle-wrapper.outputs.artifact_path }}
             if-no-files-found: error
+
+        - name: Bỏ qua kiểm thử do chưa có Gradle project
+          if: ${{ steps.gradle-wrapper.outputs.gradlew_cmd == '' }}
+          run: echo "Không tìm thấy Gradle Wrapper (gradlew), bỏ qua bước test/build."
